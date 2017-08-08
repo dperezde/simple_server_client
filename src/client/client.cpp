@@ -29,6 +29,14 @@ constexpr bool is_lvalue(T&&) noexcept
 	  return std::is_lvalue_reference<T>{};
 }
 
+void Client::pr_ids(void)
+{
+	std::cout << "Assigned ids for this Client are:" << std::endl;
+	for (const auto& i: r_ids) {
+		std::cout << i << std::endl;
+	}
+}
+
 /*
  * Constructor para clientes:
  * @param size:  número de identificadores a guardar en el servido (tamaño de la tabla en el servidor)
@@ -39,33 +47,25 @@ Client::Client(int size, std::string port_n, std::string ip_addr) : server_size{
 {
 	// Initialize vectors with randomly assigned ids [1, 250], and names
 	r_ids.reserve(server_size);
-	generate_ids(r_ids);
+
+	auto generate_ids = [&id = r_ids]() {
+		for (size_t i = 1; i <= id.capacity(); ++i) {
+			id.emplace_back(i);
+		}
+		auto engine = std::default_random_engine();
+
+		std::shuffle(id.begin(), id.end(), engine);
+	};
+
+	generate_ids();
+
 
 	for (std::vector<int>::size_type i = 0 ; i < r_ids.size(); ++i ) {
-		p_insert.emplace_back(std::make_pair(r_ids[i],
-						     names[i % names.size()]));
+		p_insert.emplace_back(std::make_pair(r_ids[i], names[i %
+						     names.size()]));
+
 	}
 }
-
-/*
- * generate_ids
- * Crea un vector de identificadores únicos y aleatoriamente ordenados
- * @param id: vector en el que se guardan los identificadores generados
- */
-void Client::generate_ids(std::vector<int>& id) noexcept
-{
-	auto cap = id.capacity();
-
-	for (size_t i = 1 ; i <= cap; ++i) {
-		id.emplace_back(i);
-	}
-	auto engine = std::default_random_engine();
-
-	std::shuffle(id.begin(), id.end(), engine);
-	/* http://stackoverflow.com/questions/26290316/difference-between-vectorbegin-and-stdbegin
-	 */
-}
-
 
 /*
  * connect

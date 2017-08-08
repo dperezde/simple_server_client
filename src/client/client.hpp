@@ -22,6 +22,7 @@ public:
   int connect(void);
   int send(void);
   int receive(void);
+  void pr_ids(void);
 
 
 private:
@@ -32,7 +33,6 @@ private:
 
   std::string port;
   std::string ip;
-  void generate_ids(std::vector<int>& id) noexcept;
   std::chrono::duration<double, std::milli> t_lapse;
 
 
