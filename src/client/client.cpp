@@ -32,7 +32,7 @@ constexpr bool is_lvalue(T&&) noexcept
 void Client::pr_ids(void)
 {
 	std::cout << "Assigned ids for this Client are:" << std::endl;
-	for (const auto& i: r_ids) {
+	for (const auto& i: r_ids_) {
 		std::cout << i << std::endl;
 	}
 }
@@ -43,12 +43,12 @@ void Client::pr_ids(void)
  * @param port:  puerto de habilitado en el servidor
  * @param ip_addr: dirección IP del servidor
  */
-Client::Client(int size, std::string port_n, std::string ip_addr) : server_size{size} ,  port{port_n}, ip{ip_addr}
+Client::Client(int size, std::string port_n, std::string ip_addr) : server_size_{size} ,  port_{port_n}, ip_{ip_addr}
 {
 	// Initialize vectors with randomly assigned ids [1, 250], and names
-	r_ids.reserve(server_size);
+	r_ids_.reserve(server_size_);
 
-	auto generate_ids = [&id = r_ids]() {
+	auto generate_ids = [&id = r_ids_]() {
 		for (size_t i = 1; i <= id.capacity(); ++i) {
 			id.emplace_back(i);
 		}
@@ -60,9 +60,9 @@ Client::Client(int size, std::string port_n, std::string ip_addr) : server_size{
 	generate_ids();
 
 
-	for (std::vector<int>::size_type i = 0 ; i < r_ids.size(); ++i ) {
-		p_insert.emplace_back(std::make_pair(r_ids[i], names[i %
-						     names.size()]));
+	for (std::vector<int>::size_type i = 0 ; i < r_ids_.size(); ++i ) {
+		p_insert_.emplace_back(std::make_pair(r_ids_[i], names_[i %
+						     names_.size()]));
 
 	}
 }
@@ -80,16 +80,16 @@ int Client::connect(void)
 
 	/* If a specific server IP has been given as input, use that.
 	 * Otherwise use localhost*/
-	Asio::tcp::resolver::query query(port);
+	Asio::tcp::resolver::query query(port_);
 
 	Asio::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 
 	boost::system::error_code ec;
 
-	current_socket.reset(new Asio::tcp::socket(io_service));
+	current_socket_.reset(new Asio::tcp::socket(io_service));
 
 	/* Connect to the server */
-	boost::asio::connect(*current_socket, endpoint_iterator, ec);
+	boost::asio::connect(*current_socket_, endpoint_iterator, ec);
 
 	if (ec == boost::asio::error::not_found) {
 		return 0;
@@ -104,8 +104,8 @@ int Client::connect(void)
 
 int Client::send(void)
 {
-	if (current_socket == nullptr) {
-		std::cerr << "current_socket == nullptr. Invalid socket" <<
+	if (current_socket_ == nullptr) {
+		std::cerr << "current_socket_ == nullptr. Invalid socket" <<
 			std::endl;
 		return -1;
 	}
@@ -115,7 +115,7 @@ int Client::send(void)
 	boost::asio::streambuf write_buffer;
 
 	boost::system::error_code err;
-	for (const auto& i : p_insert) {
+	for (const auto& i : p_insert_) {
 		std::cout << "sending element: " << std::to_string(i.first) << std::endl;
 
 		/* Write to server. */
@@ -130,14 +130,14 @@ int Client::send(void)
 		 * +----------------+-------------------------------------------+
 		 */
 		std::cout << "Writing: " << make_string(write_buffer) << std::endl;
-		auto bytes_transferred = boost::asio::write(*current_socket, write_buffer, err);
+		auto bytes_transferred = boost::asio::write(*current_socket_, write_buffer, err);
 		std::cout << "element sent: bytes:" << bytes_transferred << std::endl;
 		write_buffer.consume(bytes_transferred); // Remove data that was written.
 		auto ts = std::chrono::high_resolution_clock::now();
 
 		std::cout << "reading from server..." << std::endl;
 		/* We only read 1 char, 0 for OK, 1 for NOK */
-		bytes_transferred = boost::asio::read(*current_socket, read_buffer,
+		bytes_transferred = boost::asio::read(*current_socket_, read_buffer,
 				boost::asio::transfer_exactly(sizeof(char)));
 
 		/* read to int */
@@ -166,11 +166,11 @@ int Client::send(void)
 			res = -1;
 		}
 
-		t_lapse = te - ts;
+		t_lapse_ = te - ts;
 		/* http://www.cppsamples.com/common-tasks/measure-execution-time.html */
 
 		std::cout << "I sent user: " << i.second << " to the server."<< std::endl
-			<< "It replied: " <<   unsigned(resp) << std::endl << "It took " << t_lapse.count() << "ms" << std::endl;
+			<< "It replied: " <<   unsigned(resp) << std::endl << "It took " << t_lapse_.count() << "ms" << std::endl;
 
 		std::this_thread::sleep_for(std::chrono::seconds(U_SEC_SLEEP));
 	}
